@@ -1,5 +1,4 @@
 import express from 'express'
-
 const router = express.Router()
 
 const app = express()
@@ -33,19 +32,6 @@ router.get("/:id", (req,res) => {
     }
 
     res.send(findTaskId)
-})
-
-router.post('/new', (req, res) => {
-    const task = req.body
-
-    if (!task.title) {
-        return res.status(400).json({error: `Task title can not be empty`})
-    }
-
-    tasks.push({  id: String(tasks.length + 1), ...task, done: "False" })
-
-
-    res.status(201).send(`${task.title} has been added to the tasks`)
 })
 
 export default router
