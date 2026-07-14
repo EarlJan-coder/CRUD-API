@@ -5,19 +5,19 @@ const app = express()
 
 const tasks = [
     {
-        "id":"1",
-        "title":"Code",
-        "done":"True",
+        "id": 1,
+        "title": "Code",
+        "done": true,
     },
     {
-        "id":"2",
-        "title":"Study",
-        "done":"True",
+        "id": 2,
+        "title": "Study",
+        "done": true,
     },
     {
-        "id":"3",
+        "id": 3,
         "title":"Eat",
-        "done":"False",
+        "done": false,
     },
 ]
 
@@ -32,6 +32,18 @@ router.get("/:id", (req,res) => {
     }
 
     res.send(findTaskId)
+})
+
+router.post("/new", (req, res) => {
+    const task = req.body
+
+    if (!task.title) {
+        return res.status(400).json({ error: "Task title can not be empty" })
+    }
+
+    tasks.push({ id:tasks.length + 1, ...task, done: false })
+
+    res.status(201).json(`${task.title} has been added to the tasks`)
 })
 
 export default router
