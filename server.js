@@ -1,10 +1,14 @@
 import express from 'express'
 import bodyParser from 'body-parser'
 
+import tasksRoutes from './routes/tasks.js'
+
 const app = express()
 const PORT = 3000
 
 app.use(bodyParser.json())
+
+app.use('/tasks', tasksRoutes)
 
 app.get("/", (req, res) => {
     console.log('[GET ROUTE]')
