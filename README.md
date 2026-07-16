@@ -44,5 +44,4 @@ Keep-Alive: timeout=5
 
 {"status":"ok"}
 ```
-
-![swaggerdocs](image.png)
+![swaggerui](image.png)
