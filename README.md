@@ -33,6 +33,7 @@ curl -i http://localhost:3000/health
 ```
 
 ```
+-
 HTTP/1.1 200 OK
 X-Powered-By: Express
 Content-Type: application/json; charset=utf-8
