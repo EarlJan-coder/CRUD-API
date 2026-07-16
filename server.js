@@ -11,7 +11,7 @@ const PORT = 3000
 app.use(bodyParser.json())
 
 app.use('/tasks', tasksRoutes)
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, { explorer: true }))
 
 app.get("/", (req, res) => {
     console.log('[GET ROUTE]')

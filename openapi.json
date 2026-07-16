@@ -1,47 +1,54 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.1.0",
   "info": {
     "title": "Task API",
     "version": "1.0.0",
-    "description": "A simple Task management API"
-  },
-  "paths": {
-    "/": {
-      "get": {
-        "summary": "API Info",
-        "description": "Returns basic API information",
-        "responses": {
-          "200": {
-            "description": "API information",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "name": { "type": "string" },
-                    "version": { "type": "string" },
-                    "endpoints": { "type": "array", "items": { "type": "string" } }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+    "description": "A simple Task management API with CRUD operations for managing tasks",
+    "license": {
+      "name": "MIT",
+      "url": "https://spdx.org/licenses/MIT.html"
     },
+    "contact": {
+      "name": "Task API Support",
+      "email": "support@taskapi.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Health check endpoints"
+    },
+    {
+      "name": "Tasks",
+      "description": "Task management operations"
+    }
+  ],
+  "paths": {
     "/health": {
       "get": {
         "summary": "Health Check",
         "description": "Returns the health status of the API",
+        "tags": ["Health"],
         "responses": {
           "200": {
             "description": "Health status",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": { "type": "string" }
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "examples": {
+                  "ok": {
+                    "summary": "Healthy status",
+                    "value": {
+                      "status": "ok"
+                    }
                   }
                 }
               }
@@ -52,8 +59,30 @@
     },
     "/tasks": {
       "get": {
-        "summary": "List all tasks",
-        "description": "Returns a list of all tasks",
+        "summary": "List or filter tasks",
+        "description": "Returns all tasks or filters by done status and/or searches by title",
+        "tags": ["Tasks"],
+        "parameters": [
+          {
+            "name": "done",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "description": "Filter by done status"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search by title"
+          }
+        ],
         "responses": {
           "200": {
             "description": "List of tasks",
@@ -62,14 +91,37 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": { "type": "integer" },
-                      "title": { "type": "string" },
-                      "done": { "type": "boolean" }
-                    }
+                    "$ref": "#/components/schemas/Task"
+                  }
+                },
+                "examples": {
+                  "tasksList": {
+                    "summary": "Sample tasks list",
+                    "value": [
+                      {
+                        "id": 1,
+                        "title": "Code",
+                        "done": true
+                      },
+                      {
+                        "id": 2,
+                        "title": "Study",
+                        "done": true
+                      }
+                    ]
                   }
                 }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Undefined query"
               }
             }
           }
@@ -78,16 +130,21 @@
       "post": {
         "summary": "Create a new task",
         "description": "Creates a new task with the provided title",
+        "tags": ["Tasks"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": ["title"],
-                "properties": {
-                  "title": { "type": "string" },
-                  "done": { "type": "boolean", "default": false }
+                "$ref": "#/components/schemas/CreateTaskRequest"
+              },
+              "examples": {
+                "newTask": {
+                  "summary": "New task example",
+                  "value": {
+                    "title": "Build API documentation",
+                    "done": false
+                  }
                 }
               }
             }
@@ -97,20 +154,28 @@
           "201": {
             "description": "Task created successfully",
             "content": {
-              "text/plain": {
-                "schema": { "type": "string" }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid input",
-            "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": { "type": "string" }
+                    "message": {
+                      "type": "string",
+                      "example": "Build API documentation has been added to the tasks"
+                    }
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input - title is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Task title can not be empty"
                 }
               }
             }
@@ -122,12 +187,15 @@
       "get": {
         "summary": "Get a task by ID",
         "description": "Returns a specific task by its ID",
+        "tags": ["Tasks"],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" },
+            "schema": {
+              "type": "integer"
+            },
             "description": "Task ID"
           }
         ],
@@ -137,12 +205,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": { "type": "integer" },
-                    "title": { "type": "string" },
-                    "done": { "type": "boolean" }
-                  }
+                  "$ref": "#/components/schemas/Task"
                 }
               }
             }
@@ -152,25 +215,30 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": { "type": "string" }
-                  }
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Task 999 not found"
                 }
               }
             }
           }
         }
-      },
+      }
+    },
+    "/tasks/update/{id}": {
       "put": {
         "summary": "Update a task",
         "description": "Updates a task's title and/or done status",
+        "tags": ["Tasks"],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" },
+            "schema": {
+              "type": "integer"
+            },
             "description": "Task ID"
           }
         ],
@@ -179,11 +247,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "title": { "type": "string" },
-                  "done": { "type": "boolean" }
-                }
+                "$ref": "#/components/schemas/UpdateTaskRequest"
               }
             }
           }
@@ -193,7 +257,10 @@
             "description": "Task updated successfully",
             "content": {
               "text/plain": {
-                "schema": { "type": "string" }
+                "schema": {
+                  "type": "string",
+                  "example": "Task with id: 1 has been updated"
+                }
               }
             }
           },
@@ -201,7 +268,10 @@
             "description": "Task not found",
             "content": {
               "text/plain": {
-                "schema": { "type": "string" }
+                "schema": {
+                  "type": "string",
+                  "example": "Task not found"
+                }
               }
             }
           }
@@ -212,12 +282,15 @@
       "delete": {
         "summary": "Delete a task",
         "description": "Deletes a task by its ID",
+        "tags": ["Tasks"],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "integer" },
+            "schema": {
+              "type": "integer"
+            },
             "description": "Task ID"
           }
         ],
@@ -229,9 +302,89 @@
             "description": "Task not found",
             "content": {
               "text/plain": {
-                "schema": { "type": "string" }
+                "schema": {
+                  "type": "string",
+                  "example": "Task not found"
+                }
               }
             }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Task": {
+        "type": "object",
+        "required": ["id", "title", "done"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The auto-generated ID of the task",
+            "example": 1
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the task",
+            "example": "Code"
+          },
+          "done": {
+            "type": "boolean",
+            "description": "Whether the task is completed",
+            "example": true
+          }
+        }
+      },
+      "CreateTaskRequest": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the task",
+            "example": "Build API documentation"
+          },
+          "done": {
+            "type": "boolean",
+            "description": "Whether the task is completed",
+            "default": false,
+            "example": false
+          }
+        }
+      },
+      "UpdateTaskRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The updated title of the task",
+            "example": "Updated task title"
+          },
+          "done": {
+            "type": "boolean",
+            "description": "Whether the task is completed",
+            "example": true
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Health status",
+            "example": "ok"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message",
+            "example": "Task not found"
           }
         }
       }
