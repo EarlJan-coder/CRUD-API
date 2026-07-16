@@ -18,9 +18,8 @@ npm run dev
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | / | API info |
 | GET | /health | Health check |
-| GET | /tasks | List all tasks |
+| GET | /tasks | List or filter tasks (use `?done=true/false&search=title`) |
 | GET | /tasks/:id | Get task by ID |
 | POST | /tasks/new | Create new task |
 | PUT | /tasks/update/:id | Update task |
